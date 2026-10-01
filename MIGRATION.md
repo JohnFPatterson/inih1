@@ -84,7 +84,7 @@ SonarQube Cloud, long-lived branch `master`, analysis `2026-10-01T04:41:14Z` (pr
 | Security hotspots `TO_REVIEW` on `ini.c` / `ini.h` | none |
 | Other open issue | `c:S912` at `ini.c:49`, type CODE_SMELL, impact MAINTAINABILITY only (`*--end` in `ini_rstrip`). Not a `PE-NNN`. Rust `rstrip` matches the bytes |
 
-The local `Sonarqube` MCP namespace failed tool discovery, and `mcp_auth` could not prompt. The cloud project has no analysis of this branch's new Rust. No Rust SECURITY issue or `TO_REVIEW` hotspot was returned.
+Rechecked on 2026-10-01 after the port commit, using the project key from the environment and not storing it here. `list_branches` returns only long-lived `master` (analysis `2026-10-01T04:41:14+0000`); `list_pull_requests` returns 0. `search_sonar_issues_in_projects` with `SECURITY` and statuses OPEN/CONFIRMED returns 0. `search_security_hotspots` with `TO_REVIEW` returns 0. The only open issue is `c:S912` (`show_rule`: type CODE_SMELL, impact MAINTAINABILITY). The local `Sonarqube` MCP namespace is in error (`mcp_auth` has no authentication URL). `sonar analyze` on `ini.c`, `ini.h`, and the new Rust files returns 403: Vortex analysis is not available on this connection. There is still no analysis of this branch's new Rust, so no Rust SECURITY issue or `TO_REVIEW` hotspot was returned.
 
 ### Rust Sonar mitigations
 

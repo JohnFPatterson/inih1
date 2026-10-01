@@ -1,3 +1,4 @@
+#![deny(clippy::undocumented_unsafe_blocks)]
 //! Pointer-level ABI checks for the default `ini.h` surface.
 //!
 //! inih does not return interior pointers, alias a caller buffer, or expose a
@@ -40,6 +41,8 @@ unsafe extern "C" fn collect(
     name: *const c_char,
     value: *const c_char,
 ) -> c_int {
+    // SAFETY: this test passes `user` as `*mut Option<Hit>` and keeps it alive
+    // for the call. `section` / `name` / `value` follow the ini.h callback contract.
     let slot = &mut *(user as *mut Option<Hit>);
     let hit = Hit {
         section: copy_cstr(section).unwrap_or_default(),
@@ -50,6 +53,8 @@ unsafe extern "C" fn collect(
     *slot = Some(hit);
     // Header: value may be cast to char* and modified for the duration of the call.
     if !value.is_null() && !name.is_null() {
+        // SAFETY: `value` was just checked non-null. ini.h allows writing it
+        // for the duration of this callback, and it is NUL-terminated.
         let bytes = CStr::from_ptr(value).to_bytes();
         if !bytes.is_empty() {
             let mutable = value as *mut c_char;
@@ -64,6 +69,7 @@ unsafe extern "C" fn collect(
 fn string_callbacks_see_copied_fields_not_caller_buffer() {
     let raw = CString::new("[sec]\nname=value\n").unwrap();
     let mut hit: Option<Hit> = None;
+    // SAFETY: `raw` is a live NUL-terminated CString. `hit` outlives the call.
     let rc = unsafe {
         ini_parse_string(
             raw.as_ptr(),
@@ -85,6 +91,8 @@ fn string_callbacks_see_copied_fields_not_caller_buffer() {
 fn string_length_honors_explicit_length() {
     let raw = b"a=bX";
     let mut hit: Option<Hit> = None;
+    // SAFETY: `raw` has 4 bytes and the length argument is 3, so the slice
+    // stays inside the buffer. `hit` outlives the call.
     let rc = unsafe {
         ini_parse_string_length(
             raw.as_ptr().cast(),
@@ -110,6 +118,7 @@ fn handler_zero_reports_that_line() {
         0
     }
     let raw = CString::new("a=b\n").unwrap();
+    // SAFETY: `raw` is a live NUL-terminated CString. The handler ignores `user`.
     let rc = unsafe { ini_parse_string(raw.as_ptr(), Some(reject), ptr::null_mut()) };
     assert_eq!(rc, 1);
 }
@@ -117,6 +126,8 @@ fn handler_zero_reports_that_line() {
 #[test]
 fn missing_file_is_minus_one() {
     let path = CString::new("/no/such/inih-ffi-missing.ini").unwrap();
+    // SAFETY: `path` is a live NUL-terminated CString. The missing file returns
+    // before the handler runs, so a null `user` is not dereferenced.
     let rc = unsafe { ini_parse(path.as_ptr(), Some(collect), ptr::null_mut()) };
     assert_eq!(rc, -1);
 }
@@ -126,9 +137,12 @@ fn parse_file_matches_parse_string() {
     let dir = std::env::temp_dir().join("inih-ffi-abi.ini");
     std::fs::write(&dir, "k=v\n").unwrap();
     let path = CString::new(dir.to_str().unwrap()).unwrap();
+    // SAFETY: `path` is a live NUL-terminated CString. The mode is a static `r`.
     let file = unsafe { fopen(path.as_ptr(), c"r".as_ptr()) };
     assert!(!file.is_null());
     let mut hit: Option<Hit> = None;
+    // SAFETY: `file` is the non-null `fopen` result and stays open for this call.
+    // `hit` outlives the call.
     let rc = unsafe {
         ini_parse_file(
             file,
@@ -136,6 +150,7 @@ fn parse_file_matches_parse_string() {
             &mut hit as *mut Option<Hit> as *mut c_void,
         )
     };
+    // SAFETY: `file` is the same pointer `fopen` returned above.
     unsafe {
         fclose(file);
     }
@@ -156,6 +171,8 @@ unsafe extern "C" fn mem_reader(
     num: c_int,
     stream: *mut c_void,
 ) -> *mut c_char {
+    // SAFETY: this test passes `stream` as `*mut Mem` and keeps it alive for
+    // the call. `str_buf` has room for `num` bytes, with `num >= 2`.
     let ctx = &mut *(stream as *mut Mem);
     if ctx.pos >= ctx.data.len() || num < 2 {
         return ptr::null_mut();
@@ -183,6 +200,7 @@ fn parse_stream_uses_caller_reader() {
         pos: 0,
     };
     let mut hit: Option<Hit> = None;
+    // SAFETY: `mem` and `hit` outlive the call and match the reader and handler.
     let rc = unsafe {
         ini_parse_stream(
             Some(mem_reader),
@@ -201,6 +219,7 @@ fn parse_stream_uses_caller_reader() {
 #[test]
 fn empty_length_is_success_without_calls() {
     let mut hit: Option<Hit> = None;
+    // SAFETY: length 0 does not read the null pointer. `hit` outlives the call.
     let rc = unsafe {
         ini_parse_string_length(
             ptr::null(),
