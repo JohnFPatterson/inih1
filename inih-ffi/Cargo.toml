@@ -1,0 +1,14 @@
+[package]
+name = "inih-ffi"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "C ABI shim for the inih Rust port"
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+inih-core = { path = "../inih-core" }
+libc = "0.2.169"
