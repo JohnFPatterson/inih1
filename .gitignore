@@ -1,2 +1,4 @@
 fuzzing/findings
 fuzzing/inihfuzz
+/target/
+/build/

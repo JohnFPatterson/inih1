@@ -1,0 +1,28 @@
+{
+  "$comment": "inih C-to-Rust parity. Commands are argv arrays from the repo root. {input} is the fixture path. build compiles every C oracle variant and the Rust driver. Modules omitted: one driver section (parse) covers the full unittest.sh config matrix inside each driver.",
+  "build": ["make", "parity-build"],
+  "c_cmd": ["./build/inih-oracle", "{input}"],
+  "rust_cmd": ["./target/release/inih-driver", "{input}"],
+  "input_mode": "arg",
+  "fixtures": ["tests/*.ini"],
+  "report_dir": "build/parity-gate",
+  "oracle_sources": [
+    "ini.c",
+    "ini.h",
+    "cpp/INIReader.h",
+    "examples/ini_dump.c",
+    "examples/ini_example.c",
+    "examples/ini_xmacros.c",
+    "fuzzing/inihfuzz.c",
+    "tests/unittest.c",
+    "tests/unittest_alloc.c",
+    "tests/unittest_string.c"
+  ],
+  "exceptions_file": "PARITY_EXCEPTIONS.md",
+  "exceptions_rs": ["*-core/tests/exceptions.rs"],
+  "exceptions_test": ["cargo", "test", "-p", "inih-core", "--test", "exceptions", "--target-dir", "target"],
+  "per_run_timeout_s": 30,
+  "build_timeout_s": 600,
+  "compare_stderr": false,
+  "hash_exclude": ["build/**", "target/**"]
+}

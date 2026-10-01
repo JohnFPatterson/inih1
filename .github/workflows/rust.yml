@@ -1,0 +1,19 @@
+name: Rust
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: fmt, clippy, test
+        run: |
+          cargo fmt --all --check
+          cargo clippy --all-targets --target-dir target -- -D warnings
+          cargo test --workspace --target-dir target

@@ -1,2 +1,4 @@
 # Ensure MSVC CI tests with the same line endings that are used in the tarball
 /tests/baseline_*.txt		eol=lf
+# Fixture bytes are the parity oracle; do not let text=auto rewrite them.
+/tests/*.ini	-text
