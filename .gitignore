@@ -1,2 +1,3 @@
 fuzzing/findings
 fuzzing/inihfuzz
+.cursor/hooks/c-rust-parity/state/
