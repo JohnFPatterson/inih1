@@ -1,0 +1,9 @@
+[package]
+name = "inih-core"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Safe Rust port of the inih INI parser"
+
+[dependencies]

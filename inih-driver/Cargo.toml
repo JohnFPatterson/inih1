@@ -1,0 +1,14 @@
+[package]
+name = "inih-driver"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "SAX trace driver for the inih Rust port"
+
+[[bin]]
+name = "rust-driver"
+path = "src/main.rs"
+
+[dependencies]
+inih-core = { path = "../inih-core" }
